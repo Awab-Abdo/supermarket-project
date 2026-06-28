@@ -1,96 +1,106 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
-import Navbar from '../components/Navbar'
-import { ShoppingCart, Plus, Minus, Check, X } from 'lucide-react'
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
+import { ShoppingCart, Plus, Minus, Check, X } from "lucide-react";
 
-const categories = ['الكل', 'مواد تموينية', 'أدوات منزلية', 'مستحضرات تجميل']
+const categories = ["الكل", "مواد تموينية", "أدوات منزلية", "مستحضرات تجميل"];
 
 const Home = () => {
-  const [products, setProducts] = useState([])
-  const [cart, setCart] = useState({ items: [] })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('الكل')
-  const [loading, setLoading] = useState(true)
-  const [addingToCart, setAddingToCart] = useState({})
-  const { token } = useAuth()
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState({ items: [] });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("الكل");
+  const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState({});
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetchProducts()
-    fetchCart()
-  }, [])
+    fetchProducts();
+    fetchCart();
+  }, []);
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('/api/products')
-      setProducts(res.data)
+      const res = await axios.get("/api/products");
+      setProducts(res.data);
     } catch (err) {
-      console.error('Error fetching products:', err)
+      console.error("Error fetching products:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get('/api/cart')
-      setCart(res.data)
+      const res = await axios.get("/api/cart");
+      setCart(res.data);
     } catch (err) {
-      console.error('Error fetching cart:', err)
+      console.error("Error fetching cart:", err);
     }
-  }
+  };
 
   const addToCart = async (productId) => {
-    setAddingToCart(prev => ({ ...prev, [productId]: true }))
+    setAddingToCart((prev) => ({ ...prev, [productId]: true }));
     try {
-      await axios.post('/api/cart', { productId, quantity: 1 })
-      await fetchCart()
+      await axios.post("https://supermarket-api-w79n.onrender.com/api/cart", {
+        productId,
+        quantity: 1,
+      });
+      await fetchCart();
     } catch (err) {
-      alert(err.response?.data?.message || 'خطأ في إضافة المنتج')
+      alert(err.response?.data?.message || "خطأ في إضافة المنتج");
     } finally {
-      setAddingToCart(prev => ({ ...prev, [productId]: false }))
+      setAddingToCart((prev) => ({ ...prev, [productId]: false }));
     }
-  }
+  };
 
   const getCartQuantity = (productId) => {
-    const item = cart.items?.find(item => item.product?._id === productId)
-    return item?.quantity || 0
-  }
+    const item = cart.items?.find((item) => item.product?._id === productId);
+    return item?.quantity || 0;
+  };
 
   const getCartCount = () => {
-    return cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
-  }
+    return cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'الكل' || product.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "الكل" || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} cartCount={getCartCount()} />
+      <Navbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        cartCount={getCartCount()}
+      />
 
       {/* Categories */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === cat
-                    ? 'bg-primary-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? "bg-primary-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 {cat}
@@ -109,9 +119,9 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map(product => {
-              const cartQty = getCartQuantity(product._id)
-              const available = product.available && product.quantity > 0
+            {filteredProducts.map((product) => {
+              const cartQty = getCartQuantity(product._id);
+              const available = product.available && product.quantity > 0;
 
               return (
                 <div
@@ -122,10 +132,16 @@ const Home = () => {
                   <div className="aspect-square bg-gray-100 relative overflow-hidden">
                     {product.image ? (
                       <img
-                        src={product.image.startsWith('http') ? product.image : `https://supermarket-api-w79n.onrender.com${product.image}`}
+                        src={
+                          product.image.startsWith("http")
+                            ? product.image
+                            : `https://supermarket-api-w79n.onrender.com${product.image}`
+                        }
                         alt={product.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none' }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -134,15 +150,21 @@ const Home = () => {
                     )}
                     {/* Status Badge */}
                     <div className="absolute top-3 left-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        available
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          available
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {available ? (
-                          <span className="flex items-center gap-1"><Check className="w-3 h-3" /> متوفر</span>
+                          <span className="flex items-center gap-1">
+                            <Check className="w-3 h-3" /> متوفر
+                          </span>
                         ) : (
-                          <span className="flex items-center gap-1"><X className="w-3 h-3" /> غير متوفر</span>
+                          <span className="flex items-center gap-1">
+                            <X className="w-3 h-3" /> غير متوفر
+                          </span>
                         )}
                       </span>
                     </div>
@@ -156,8 +178,12 @@ const Home = () => {
 
                   {/* Content */}
                   <div className="p-4">
-                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
-                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                      {product.description}
+                    </p>
 
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-lg font-bold text-primary-600">
@@ -172,15 +198,18 @@ const Home = () => {
                     {available ? (
                       <button
                         onClick={() => addToCart(product._id)}
-                        disabled={addingToCart[product._id] || cartQty >= product.quantity}
+                        disabled={
+                          addingToCart[product._id] ||
+                          cartQty >= product.quantity
+                        }
                         className={`w-full py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
                           cartQty > 0
-                            ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
-                            : 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
+                            ? "bg-primary-100 text-primary-700 hover:bg-primary-200"
+                            : "bg-primary-600 text-white hover:bg-primary-700 shadow-md"
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {addingToCart[product._id] ? (
-                          'جاري الإضافة...'
+                          "جاري الإضافة..."
                         ) : cartQty > 0 ? (
                           <>
                             <Plus className="w-4 h-4" />
@@ -203,13 +232,13 @@ const Home = () => {
                     )}
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
