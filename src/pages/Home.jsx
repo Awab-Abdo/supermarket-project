@@ -122,7 +122,7 @@ const Home = () => {
                   <div className="aspect-square bg-gray-100 relative overflow-hidden">
                     {product.image ? (
                       <img
-                        src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`}
+                        src={product.image.startsWith('http') ? product.image : `https://supermarket-api-w79n.onrender.com${product.image}`}
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => { e.target.style.display = 'none' }}

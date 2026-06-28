@@ -1,65 +1,74 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import {
+  ShoppingCart,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowRight,
+  Package,
+} from "lucide-react";
 
 const Cart = () => {
-  const [cart, setCart] = useState({ items: [] })
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState({})
+  const [cart, setCart] = useState({ items: [] });
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState({});
 
   useEffect(() => {
-    fetchCart()
-  }, [])
+    fetchCart();
+  }, []);
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get('/api/cart')
-      setCart(res.data)
+      const res = await axios.get("/api/cart");
+      setCart(res.data);
     } catch (err) {
-      console.error('Error fetching cart:', err)
+      console.error("Error fetching cart:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateQuantity = async (productId, quantity) => {
-    setUpdating(prev => ({ ...prev, [productId]: true }))
+    setUpdating((prev) => ({ ...prev, [productId]: true }));
     try {
       if (quantity <= 0) {
-        await axios.delete(`/api/cart/${productId}`)
+        await axios.delete(`/api/cart/${productId}`);
       } else {
-        await axios.put(`/api/cart/${productId}`, { quantity })
+        await axios.put(`/api/cart/${productId}`, { quantity });
       }
-      await fetchCart()
+      await fetchCart();
     } catch (err) {
-      alert(err.response?.data?.message || 'خطأ في تحديث الكمية')
+      alert(err.response?.data?.message || "خطأ في تحديث الكمية");
     } finally {
-      setUpdating(prev => ({ ...prev, [productId]: false }))
+      setUpdating((prev) => ({ ...prev, [productId]: false }));
     }
-  }
+  };
 
   const removeItem = async (productId) => {
     try {
-      await axios.delete(`/api/cart/${productId}`)
-      await fetchCart()
+      await axios.delete(`/api/cart/${productId}`);
+      await fetchCart();
     } catch (err) {
-      alert(err.response?.data?.message || 'خطأ في حذف المنتج')
+      alert(err.response?.data?.message || "خطأ في حذف المنتج");
     }
-  }
+  };
 
   const getTotal = () => {
-    return cart.items?.reduce((sum, item) => {
-      return sum + (item.product?.price || 0) * item.quantity
-    }, 0) || 0
-  }
+    return (
+      cart.items?.reduce((sum, item) => {
+        return sum + (item.product?.price || 0) * item.quantity;
+      }, 0) || 0
+    );
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -84,8 +93,12 @@ const Cart = () => {
         {!cart.items || cart.items.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
             <ShoppingCart className="w-20 h-20 text-gray-200 mx-auto mb-6" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">السلة فارغة</h2>
-            <p className="text-gray-500 mb-6">ابدأ التسوق وإضافة المنتجات إلى سلة المشتريات</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              السلة فارغة
+            </h2>
+            <p className="text-gray-500 mb-6">
+              ابدأ التسوق وإضافة المنتجات إلى سلة المشتريات
+            </p>
             <Link
               to="/home"
               className="inline-block bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-md"
@@ -104,12 +117,14 @@ const Cart = () => {
                   </div>
                   <div>
                     <h2 className="font-bold text-gray-900">منتجاتك</h2>
-                    <p className="text-sm text-gray-500">{cart.items.length} منتج في السلة</p>
+                    <p className="text-sm text-gray-500">
+                      {cart.items.length} منتج في السلة
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {cart.items.map(item => (
+                  {cart.items.map((item) => (
                     <div
                       key={item.product._id}
                       className="flex gap-4 p-4 bg-gray-50 rounded-xl"
@@ -118,10 +133,16 @@ const Cart = () => {
                       <div className="w-20 h-20 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                         {item.product.image ? (
                           <img
-                            src={item.product.image.startsWith('http') ? item.product.image : `http://localhost:5000${item.product.image}`}
+                            src={
+                              item.product.image.startsWith("http")
+                                ? item.product.image
+                                : `https://supermarket-api-w79n.onrender.com${item.product.image}`
+                            }
                             alt={item.product.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => { e.target.style.display = 'none' }}
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -132,7 +153,9 @@ const Cart = () => {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 mb-1 truncate">{item.product.name}</h3>
+                        <h3 className="font-bold text-gray-900 mb-1 truncate">
+                          {item.product.name}
+                        </h3>
                         <p className="text-sm text-primary-600 font-semibold mb-2">
                           {item.product.price.toFixed(2)} ج.م
                         </p>
@@ -141,18 +164,33 @@ const Cart = () => {
                         <div className="flex items-center gap-3">
                           <div className="flex items-center bg-white rounded-lg border border-gray-200">
                             <button
-                              onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item.product._id,
+                                  item.quantity - 1,
+                                )
+                              }
                               disabled={updating[item.product._id]}
                               className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
                             <span className="w-10 text-center font-semibold text-sm">
-                              {updating[item.product._id] ? '...' : item.quantity}
+                              {updating[item.product._id]
+                                ? "..."
+                                : item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                              disabled={updating[item.product._id] || item.quantity >= item.product.quantity}
+                              onClick={() =>
+                                updateQuantity(
+                                  item.product._id,
+                                  item.quantity + 1,
+                                )
+                              }
+                              disabled={
+                                updating[item.product._id] ||
+                                item.quantity >= item.product.quantity
+                              }
                               className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Plus className="w-4 h-4" />
@@ -184,11 +222,15 @@ const Cart = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">عدد المنتجات</span>
-                <span className="font-semibold">{cart.items.reduce((s, i) => s + i.quantity, 0)}</span>
+                <span className="font-semibold">
+                  {cart.items.reduce((s, i) => s + i.quantity, 0)}
+                </span>
               </div>
               <div className="border-t border-gray-100 pt-4 mt-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-900">الإجمالي</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    الإجمالي
+                  </span>
                   <span className="text-2xl font-bold text-primary-600">
                     {getTotal().toFixed(2)} ج.م
                   </span>
@@ -199,7 +241,7 @@ const Cart = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Cart
+export default Cart;
