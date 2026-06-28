@@ -22,7 +22,9 @@ const Home = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/api/products");
+      const res = await axios.get(
+        "https://supermarket-api-w79n.onrender.com/api/products",
+      );
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products:", err);

@@ -21,7 +21,9 @@ const Cart = () => {
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get("/api/cart");
+      const res = await axios.get(
+        "https://supermarket-api-w79n.onrender.com/api/cart",
+      );
       setCart(res.data);
     } catch (err) {
       console.error("Error fetching cart:", err);
@@ -34,9 +36,14 @@ const Cart = () => {
     setUpdating((prev) => ({ ...prev, [productId]: true }));
     try {
       if (quantity <= 0) {
-        await axios.delete(`/api/cart/${productId}`);
+        await axios.delete(
+          `https://supermarket-api-w79n.onrender.com/api/cart/${productId}`,
+        );
       } else {
-        await axios.put(`/api/cart/${productId}`, { quantity });
+        await axios.put(
+          `https://supermarket-api-w79n.onrender.com/api/cart/${productId}`,
+          { quantity },
+        );
       }
       await fetchCart();
     } catch (err) {
@@ -48,7 +55,9 @@ const Cart = () => {
 
   const removeItem = async (productId) => {
     try {
-      await axios.delete(`/api/cart/${productId}`);
+      await axios.delete(
+        `https://supermarket-api-w79n.onrender.com/api/cart/${productId}`,
+      );
       await fetchCart();
     } catch (err) {
       alert(err.response?.data?.message || "خطأ في حذف المنتج");
