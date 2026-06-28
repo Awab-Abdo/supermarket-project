@@ -23,8 +23,8 @@ export const AuthProvider = ({ children }) => {
         "https://supermarket-api-w79n.onrender.com/api/auth/me",
       );
       setUser(res.data);
-    } catch {
-      logout();
+    } catch (err) {
+      console.log("Auth check failed:", setUser(null));
     } finally {
       setLoading(false);
     }

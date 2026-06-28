@@ -1,14 +1,17 @@
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { user, token } = useAuth()
-
-  if (!token || !user) {
-    return <Navigate to="/" replace />
+  const { user, token, loading } = useAuth();
+  if (loading) {
+    return null;
   }
 
-  return children
-}
+  if (!token || !user) {
+    return <Navigate to="/" replace />;
+  }
 
-export default ProtectedRoute
+  return children;
+};
+
+export default ProtectedRoute;
