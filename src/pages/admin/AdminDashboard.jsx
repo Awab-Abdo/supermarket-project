@@ -49,7 +49,9 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/api/products");
+      const res = await axios.get(
+        "https://supermarket-api-w79n.onrender.com/api/products",
+      );
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products:", err);
@@ -60,7 +62,9 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("/api/admin/users");
+      const res = await axios.get(
+        "https://supermarket-api-w79n.onrender.com/api/admin/users",
+      );
       setUsers(res.data);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -115,13 +119,21 @@ const AdminDashboard = () => {
 
     try {
       if (editingProduct) {
-        await axios.put(`/api/admin/products/${editingProduct._id}`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.put(
+          `https://supermarket-api-w79n.onrender.com/api/admin/products/${editingProduct._id}`,
+          data,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
       } else {
-        await axios.post("/api/admin/products", data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post(
+          "https://supermarket-api-w79n.onrender.com/api/admin/products",
+          data,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
       }
       setShowModal(false);
       fetchProducts();
@@ -134,7 +146,9 @@ const AdminDashboard = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/admin/products/${id}`);
+      await axios.delete(
+        `https://supermarket-api-w79n.onrender.com/api/admin/products/${id}`,
+      );
       setDeleteConfirm(null);
       fetchProducts();
     } catch (err) {

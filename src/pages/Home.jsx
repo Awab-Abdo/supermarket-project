@@ -35,7 +35,9 @@ const Home = () => {
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get("/api/cart");
+      const res = await axios.get(
+        "https://supermarket-api-w79n.onrender.com/api/cart",
+      );
       setCart(res.data);
     } catch (err) {
       console.error("Error fetching cart:", err);
