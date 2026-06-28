@@ -7,7 +7,10 @@ const ProtectedRoute = ({ children }) => {
     return null;
   }
 
-  if (!token || !user) {
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  if (!user) {
     return <Navigate to="/" replace />;
   }
 

@@ -9,14 +9,37 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    const initAuth = async () => {
+      const savedToken = localStorage.getItem("token");
 
+      if (!savedToken) {
+        setLoading(false);
+        return;
+      }
+
+      setToken(savedToken);
+
+      try {
+        const res = await axios.get(
+          "https://supermarket-api-w79n.onrender.com/api/auth/me",
+          {
+            headers: {
+              Authorization: `Bearer ${savedToken}`,
+            },
+          },
+        );
+
+        setUser(res.data);
+      } catch (err) {
+        localStorage.removeItem("token");
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
   const fetchUser = async () => {
     try {
       const res = await axios.get(
@@ -36,8 +59,9 @@ export const AuthProvider = ({ children }) => {
   const login = (token, user) => {
     localStorage.setItem("token", token);
     setToken(token);
-    setUser(user);
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    setUser(user);
+    setLoading(false);
   };
 
   const logout = () => {
