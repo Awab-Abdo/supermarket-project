@@ -4,7 +4,7 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
@@ -42,20 +42,31 @@ export const AuthProvider = ({ children }) => {
   }, []);
   const fetchUser = async () => {
     try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const res = await axios.get(
         "https://supermarket-api-w79n.onrender.com/api/auth/me",
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
+
       setUser(res.data);
     } catch (err) {
-      console.log("Auth check failed:", setUser(null));
+      setUser(null);
+      localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
   };
-
   const login = (token, user) => {
     localStorage.setItem("token", token);
     setToken(token);
