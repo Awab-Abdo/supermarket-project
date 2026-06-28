@@ -21,6 +21,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.get(
         "https://supermarket-api-w79n.onrender.com/api/auth/me",
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
       );
       setUser(res.data);
     } catch (err) {
