@@ -10,23 +10,30 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  import axios from "axios";
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
 
     try {
+      setError("");
+      setLoading(true);
+
       const res = await axios.post(
         "https://supermarket-api-w79n.onrender.com/api/auth/login",
-        { email, password },
+        {
+          email,
+          password,
+        },
       );
+
       login(res.data.token, res.data.user);
+
       navigate("/home");
     } catch (err) {
-      setError(err.response?.data?.message || "حدث خطأ");
+      setError(err.response?.data?.message || "فشل تسجيل الدخول");
     } finally {
       setLoading(false);
     }
