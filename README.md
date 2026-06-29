@@ -1,74 +1,127 @@
 # سوبرماركت سيد أحمد
 
-مشروع ويب متكامل لعرض منتجات السوبرماركت مع سلة مشتريات ولوحة تحكم إدارية.
+مشروع متجر إلكتروني كامل لعرض المنتجات وإضافتها إلى السلة.
+
+## هيكل المشروع
+
+```
+project/
+├── src/                    # Frontend (React + Vite + Tailwind)
+│   ├── pages/              # صفحات التطبيق
+│   │   ├── WelcomeScreen.jsx
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── Home.jsx
+│   │   ├── ProductDetail.jsx
+│   │   ├── Cart.jsx
+│   │   └── admin/          # صفحات لوحة التحكم
+│   │       ├── AdminLogin.jsx
+│   │       ├── AdminDashboard.jsx
+│   │       ├── AdminProducts.jsx
+│   │       ├── AdminAddProduct.jsx
+│   │       └── AdminEditProduct.jsx
+│   └── utils/              # أدوات المساعدة
+│       └── api.js
+│
+└── backend/                # Backend (Node.js + Express + MongoDB)
+    ├── models/
+    │   ├── User.js
+    │   ├── Product.js
+    │   └── Cart.js
+    ├── routes/
+    │   ├── auth.js
+    │   ├── products.js
+    │   ├── cart.js
+    │   └── admin.js
+    ├── middleware/
+    │   └── auth.js
+    ├── uploads/            # مجلد الصور المرفوعة
+    └── server.js
+```
+
+## التثبيت والتشغيل
+
+### 1. تثبيت وتشغيل Backend
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+الخادم سيعمل على: `http://localhost:5000`
+
+### 2. تثبيت وتشغيل Frontend
+
+في مجلد مشروع آخر:
+
+```bash
+npm install
+npm run dev
+```
+
+الواجهة ستعمل على: `http://localhost:3000`
+
+## بيانات المدير
+
+- البريد الإلكتروني: `admin@supermarket.com`
+- كلمة المرور: `admin123`
 
 ## الميزات
 
-- **تسجيل الدخول والتسجيل** باستخدام JWT و bcrypt
-- **عرض المنتجات** حسب الفئات (مواد تموينية، أدوات منزلية، مستحضرات تجميل)
-- **بحث** عن المنتجات بالاسم
-- **سلة مشتريات** مع تعديل الكميات وحذف المنتجات
-- **لوحة تحكم إدارية** لإضافة وتعديل وحذف المنتجات
+### للمستخدمين
+- تسجيل حساب جديد
+- تسجيل الدخول
+- تصفح المنتجات
+- البحث عن المنتجات
+- تصفية حسب الفئات (3 فئات)
+- إضافة المنتجات للسلة
+- تعديل الكميات في السلة
+- حذف المنتجات من السلة
 
-## هيكلة المشروع
+### للمدير
+- لوحة تحكم كاملة `/admin/login`
+- إضافة منتجات جديدة
+- تعديل المنتجات
+- حذف المنتجات
+- تغيير الأسعار والكميات
+- تغيير حالة المنتج (متوفر/غير متوفر)
+- رفع الصور من الجهاز أو استخدام روابط
 
-```
-├── server/          # Backend (Node.js + Express + MongoDB)
-│   ├── models/      # User, Product, Cart
-│   ├── routes/      # Auth, Products, Cart, Admin
-│   ├── middleware/  # JWT Authentication
-│   └── uploads/     # Uploaded images
-└── src/             # Frontend (React + Tailwind CSS)
-    ├── pages/       # Home, Cart, Login, Register, Admin
-    ├── components/  # Navbar, ProtectedRoute
-    └── context/     # AuthContext
-```
+## الفئات (3 فقط)
 
-## التثبيت
+1. مواد تموينية
+2. أدوات منزلية
+3. مستحضرات تجميل
 
-### 1. تثبيت حزم Frontend
-```bash
-npm install
-```
+## التقنيات المستخدمة
 
-### 2. تثبيت حزم Backend
-```bash
-cd server && npm install
-```
-
-### 3. إعداد MongoDB Atlas
-- قم بإنشاء قاعدة بيانات على MongoDB Atlas
-- انسخ رابط الاتصال
-- عدل ملف `server/.env` وأضف الرابط:
-```
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/supermarket?retryWrites=true&w=majority
-```
-
-### 4. تشغيل المشروع
-
-**Backend:**
-```bash
-cd server
-npm run dev
-```
-
-**Frontend (في نافذة أخرى):**
-```bash
-npm run dev
-```
-
-## الوصول للوحة الإدارة
-
-1. أنشئ مستخدمًا عاديًا
-2. عدّل المستخدم في MongoDB Atlas واجعل `isAdmin: true`
-3. سجّل الدخول باستخدام `/admin/login`
-
-## الاعتمادات
-
-- React
+### Frontend
+- React 18
+- JavaScript (بدون TypeScript)
 - Tailwind CSS
+- Vite
+- React Router DOM
+- Lucide React (للأيقونات)
+
+### Backend
 - Node.js
 - Express.js
-- MongoDB
-- JWT
-- bcryptjs
+- MongoDB Atlas
+- Mongoose
+- JWT (للمصادقة)
+- bcryptjs (لتشفير كلمات المرور)
+- Multer (لرفع الصور)
+
+## النشر
+
+- Frontend على Netlify
+- Backend على Render
+
+رابط Backend: `https://supermarket-api-w79n.onrender.com`
+
+## ملاحظات مهمة
+
+1. تأكد من أن MongoDB Atlas يعمل وقابل للاتصال
+2. تأكد من تحديث رابط API في ملف `src/utils/api.js`
+3. الصور المرفوعة تُخزن في مجلد `backend/uploads/`

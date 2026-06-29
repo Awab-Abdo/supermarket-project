@@ -1,677 +1,227 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard,
-  Package,
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Check,
-  Image as ImageIcon,
-  Upload,
-  LogOut,
-  Users,
-  AlertTriangle,
-} from "lucide-react";
+  ShieldCheck, LogOut, Package, Users, Plus, ShoppingBag,
+  TrendingUp, PackageX, ArrowLeft, Edit
+} from 'lucide-react'
+import { api } from '../../utils/api'
 
-const categories = ["مواد تموينية", "أدوات منزلية", "مستحضرات تجميل"];
-
-const AdminDashboard = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [activeTab, setActiveTab] = useState("products");
-  const [showModal, setShowModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    quantity: "",
-    category: categories[0],
-    available: true,
-    imageUrl: "",
-    imageFile: null,
-  });
+function AdminDashboard({ user, onLogout }) {
+  const navigate = useNavigate()
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    availableProducts: 0,
+    unavailableProducts: 0,
+    totalUsers: 0
+  })
+  const [recentProducts, setRecentProducts] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchProducts();
-    fetchUsers();
-  }, []);
+    fetchData()
+  }, [])
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(
-        "https://supermarket-api-w79n.onrender.com/api/products",
-      );
-      setProducts(res.data);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-    } finally {
-      setLoading(false);
+  const fetchData = async () => {
+    const productsResult = await api.get('/admin/products')
+    const usersResult = await api.get('/admin/users')
+
+    if (productsResult.success) {
+      const products = productsResult.data
+      setRecentProducts(products.slice(0, 6))
+      setStats({
+        totalProducts: products.length,
+        availableProducts: products.filter(p => p.available).length,
+        unavailableProducts: products.filter(p => !p.available).length,
+        totalUsers: usersResult.success ? usersResult.count : 0
+      })
     }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get(
-        "https://supermarket-api-w79n.onrender.com/api/admin/users",
-      );
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Error fetching users:", err);
-    }
-  };
-
-  const openAddModal = () => {
-    setEditingProduct(null);
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      quantity: "",
-      category: categories[0],
-      available: true,
-      imageUrl: "",
-      imageFile: null,
-    });
-    setShowModal(true);
-  };
-
-  const openEditModal = (product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      quantity: product.quantity,
-      category: product.category,
-      available: product.available,
-      imageUrl: product.image || "",
-      imageFile: null,
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("description", formData.description);
-    data.append("price", formData.price);
-    data.append("quantity", formData.quantity);
-    data.append("category", formData.category);
-    data.append("available", formData.available);
-    data.append("imageUrl", formData.imageUrl);
-    if (formData.imageFile) {
-      data.append("image", formData.imageFile);
-    }
-
-    try {
-      if (editingProduct) {
-        await axios.put(
-          `https://supermarket-api-w79n.onrender.com/api/admin/products/${editingProduct._id}`,
-          data,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
-      } else {
-        await axios.post(
-          "https://supermarket-api-w79n.onrender.com/api/admin/products",
-          data,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
-      }
-      setShowModal(false);
-      fetchProducts();
-    } catch (err) {
-      alert(err.response?.data?.message || "خطأ في حفظ المنتج");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(
-        `https://supermarket-api-w79n.onrender.com/api/admin/products/${id}`,
-      );
-      setDeleteConfirm(null);
-      fetchProducts();
-    } catch (err) {
-      alert(err.response?.data?.message || "خطأ في حذف المنتج");
-    }
-  };
+    setLoading(false)
+  }
 
   const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const getImageUrl = (product) => {
-    if (!product.image) return "";
-    return product.image.startsWith("http")
-      ? product.image
-      : `https://supermarket-api-w79n.onrender.com${product.image}`;
-  };
+    onLogout()
+    navigate('/')
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar + Header */}
-      <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100" dir="rtl">
+      <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gray-900 rounded-lg flex items-center justify-center">
-                <LayoutDashboard className="w-5 h-5 text-white" />
+              <div className="bg-white p-2 rounded-lg">
+                <ShieldCheck className="w-6 h-6 text-gray-800" />
               </div>
               <div>
-                <h1 className="font-bold text-gray-900">لوحة الإدارة</h1>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <h1 className="font-bold text-white">لوحة التحكم</h1>
+                <p className="text-xs text-gray-300">سوبرماركت سيد أحمد</p>
               </div>
             </div>
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"
+              className="text-gray-300 hover:text-white transition-colors flex items-center gap-2"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium">خروج</span>
+              <LogOut className="w-5 h-5" />
+              <span>خروج</span>
             </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setActiveTab("products")}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "products"
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-6">
+            <Link
+              to="/admin/dashboard"
+              className="py-4 px-2 border-b-2 border-gray-800 text-gray-800 font-medium"
             >
-              <span className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                المنتجات
-                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                  {products.length}
-                </span>
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "users"
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              الرئيسية
+            </Link>
+            <Link
+              to="/admin/products"
+              className="py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition-colors"
             >
-              <span className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                المستخدمين
-                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                  {users.length}
-                </span>
-              </span>
-            </button>
+              المنتجات
+            </Link>
+            <Link
+              to="/admin/products/add"
+              className="py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              إضافة منتج
+            </Link>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "products" && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">
-                إدارة المنتجات
-              </h2>
-              <button
-                onClick={openAddModal}
-                className="flex items-center gap-2 bg-primary-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-md"
-              >
-                <Plus className="w-4 h-4" />
-                إضافة منتج
-              </button>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <Package className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-800">{stats.totalProducts}</h3>
+                <p className="text-gray-500">إجمالي المنتجات</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <ShoppingBag className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-800">{stats.availableProducts}</h3>
+                <p className="text-gray-500">منتجات متوفرة</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-red-100 p-3 rounded-lg">
+                    <PackageX className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-800">{stats.unavailableProducts}</h3>
+                <p className="text-gray-500">منتجات غير متوفرة</p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-purple-100 p-3 rounded-lg">
+                    <Users className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-800">{stats.totalUsers}</h3>
+                <p className="text-gray-500">عدد المستخدمين</p>
+              </div>
             </div>
 
-            {products.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-                <Package className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                <p className="text-gray-500">لا توجد منتجات</p>
-                <button
-                  onClick={openAddModal}
-                  className="mt-4 text-primary-600 font-medium hover:underline"
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800">أحدث المنتجات</h2>
+              <Link
+                to="/admin/products"
+                className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+              >
+                <span>عرض الكل</span>
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {recentProducts.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-gray-800 font-semibold mb-2">لا توجد منتجات</h3>
+                <p className="text-gray-500 mb-4">ابدأ بإضافة منتجات جديدة</p>
+                <Link
+                  to="/admin/products/add"
+                  className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  إضافة منتج جديد
-                </button>
+                  <Plus className="w-5 h-5" />
+                  <span>إضافة منتج</span>
+                </Link>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          المنتج
-                        </th>
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          الفئة
-                        </th>
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          السعر
-                        </th>
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          الكمية
-                        </th>
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          الحالة
-                        </th>
-                        <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                          الإجراءات
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {products.map((product) => (
-                        <tr
-                          key={product._id}
-                          className="hover:bg-gray-50 transition-colors"
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recentProducts.map((product) => (
+                  <div key={product._id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div className="aspect-video bg-gray-100 relative">
+                      {product.image ? (
+                        <img
+                          src={product.image.startsWith('/') ? `https://supermarket-api-w79n.onrender.com${product.image}` : product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-12 h-12 text-gray-300" />
+                        </div>
+                      )}
+                      {!product.available && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-bold">غير متوفر</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-800 mb-1">{product.name}</h3>
+                      <p className="text-sm text-gray-500 mb-3">{product.category}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-gray-800">{product.price} ر.س</span>
+                        <Link
+                          to={`/admin/products/edit/${product._id}`}
+                          className="text-gray-600 hover:text-gray-800"
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                {product.image ? (
-                                  <img
-                                    src={getImageUrl(product)}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = "none";
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                    <ImageIcon className="w-6 h-6" />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900 text-sm">
-                                  {product.name}
-                                </p>
-                                <p className="text-xs text-gray-500 line-clamp-1">
-                                  {product.description}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                              {product.category}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-semibold text-primary-600">
-                            {product.price.toFixed(2)} ج.م
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {product.quantity}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                product.available && product.quantity > 0
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {product.available && product.quantity > 0 ? (
-                                <>
-                                  <Check className="w-3 h-3" /> متوفر
-                                </>
-                              ) : (
-                                <>
-                                  <X className="w-3 h-3" /> غير متوفر
-                                </>
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => openEditModal(product)}
-                                className="p-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
-                                title="تعديل"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setDeleteConfirm(product)}
-                                className="p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                                title="حذف"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          <Edit className="w-5 h-5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
-        )}
 
-        {activeTab === "users" && (
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">المستخدمين</h2>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                        الاسم
-                      </th>
-                      <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                        البريد الإلكتروني
-                      </th>
-                      <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                        نوع الحساب
-                      </th>
-                      <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
-                        تاريخ الإنشاء
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {users.map((user) => (
-                      <tr
-                        key={user._id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                          {user.name}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              user.isAdmin
-                                ? "bg-gray-900 text-white"
-                                : "bg-blue-100 text-blue-700"
-                            }`}
-                          >
-                            {user.isAdmin ? "مدير" : "مستخدم"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleDateString("ar-EG")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="mt-8">
+              <Link
+                to="/admin/products/add"
+                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>إضافة منتج جديد</span>
+              </Link>
             </div>
-          </div>
+          </>
         )}
       </div>
-
-      {/* Product Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">
-                {editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  اسم المنتج
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                  placeholder="اسم المنتج"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  الوصف
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  required
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
-                  placeholder="وصف المنتج"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    السعر
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    required
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    الكمية
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
-                    required
-                    min="0"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  الفئة
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  الحالة
-                </label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, available: true })
-                    }
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-colors ${
-                      formData.available
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300"
-                    }`}
-                  >
-                    <Check className="w-4 h-4" />
-                    متوفر
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, available: false })
-                    }
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-colors ${
-                      !formData.available
-                        ? "border-red-500 bg-red-50 text-red-700"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300"
-                    }`}
-                  >
-                    <X className="w-4 h-4" />
-                    غير متوفر
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  صورة المنتج
-                </label>
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Upload className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          imageFile: e.target.files[0],
-                        })
-                      }
-                      className="w-full pr-10 py-3 border border-gray-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary-50 file:text-primary-700 file:font-medium hover:file:bg-primary-100"
-                    />
-                  </div>
-                  <div className="text-center text-sm text-gray-400">أو</div>
-                  <input
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) =>
-                      setFormData({ ...formData, imageUrl: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                    placeholder="رابط الصورة"
-                  />
-                </div>
-                {formData.imageFile && (
-                  <p className="mt-2 text-sm text-primary-600">
-                    {formData.imageFile.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-primary-600 text-white py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-md disabled:opacity-50"
-                >
-                  {saving
-                    ? "جاري الحفظ..."
-                    : editingProduct
-                      ? "حفظ التعديلات"
-                      : "إضافة المنتج"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-7 h-7 text-red-600" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              تأكيد الحذف
-            </h3>
-            <p className="text-gray-500 mb-6">
-              هل أنت متأكد من حذف المنتج "{deleteConfirm.name}"؟ لا يمكن التراجع
-              عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm._id)}
-                className="flex-1 bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors shadow-md"
-              >
-                حذف
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+  )
+}
 
-export default AdminDashboard;
+export default AdminDashboard

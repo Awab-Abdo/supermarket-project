@@ -1,120 +1,108 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
-import { Shield, LogIn, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ShieldCheck, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { api } from '../../utils/api'
 
-const AdminLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+function AdminLogin({ onLogin }) {
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-    try {
-      const res = await axios.post(
-        "https://supermarket-api-w79n.onrender.com/api/auth/login",
-        { email, password },
-      );
-      if (!res.data.user.isAdmin) {
-        setError("غير مصرح لك بالدخول للوحة الإدارة");
-        setLoading(false);
-        return;
-      }
-      login(res.data.token, res.data.user);
-      navigate("/admin/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.message || "حدث خطأ");
-    } finally {
-      setLoading(false);
+    const result = await api.post('/admin/login', formData)
+
+    if (result.success) {
+      onLogin(result.data, result.data.token)
+      navigate('/admin/dashboard')
+    } else {
+      setError(result.message || 'بيانات الدخول غير صحيحة')
     }
-  };
+
+    setLoading(false)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-md w-full">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>رجوع</span>
-        </Link>
-
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">لوحة الإدارة</h1>
-          <p className="text-gray-500 mt-1">تسجيل دخول المدير</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-center text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all"
-              placeholder="admin@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              كلمة المرور
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none transition-all"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4" dir="rtl">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <div className="bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="w-10 h-10 text-white" />
             </div>
+            <h1 className="text-2xl font-bold text-gray-800">لوحة تحكم المدير</h1>
+            <p className="text-gray-500 mt-2">سوبرماركت سيد أحمد</p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-semibold text-lg hover:bg-gray-800 transition-colors duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "جاري التسجيل..." : "تسجيل الدخول"}
-          </button>
-        </form>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">البريد الإلكتروني</label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full pr-10 pl-4 py-3 border-2 border-gray-200 rounded-xl focus:border-gray-800 focus:outline-none transition-colors"
+                  placeholder="admin@supermarket.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">كلمة المرور</label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pr-10 pl-10 py-3 border-2 border-gray-200 rounded-xl focus:border-gray-800 focus:outline-none transition-colors"
+                  placeholder="********"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gray-800 hover:bg-gray-900 disabled:bg-gray-400 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <ShieldCheck className="w-5 h-5" />
+                  <span>دخول</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AdminLogin;
+export default AdminLogin
